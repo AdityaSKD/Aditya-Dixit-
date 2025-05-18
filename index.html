@@ -173,7 +173,7 @@
     <div id="webcam-container" aria-live="polite" aria-atomic="true"></div>
     <div id="label-container" aria-live="polite" aria-atomic="true"></div>
   </div>
- <script>
+  <script>
         // Paste your Teachable Machine model loading and prediction script here
         // It will likely include functions like:
         // - loading the model
@@ -182,62 +182,88 @@
         // - making predictions
         // - updating the prediction-container element
     </script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-  <script>
-    // Replace these URLs with your actual model files hosted on GitHub or elsewhere
-    const MODEL_URL = "https://raw.githubusercontent.com/yourusername/yourrepo/main/model.json";
-    const METADATA_URL = "https://raw.githubusercontent.com/yourusername/yourrepo/main/metadata.json";
 
-    let model, webcam, labelContainer, maxPredictions;
-    let isStreaming = false;
+    <script>
+        const imageUpload = document.getElementById('image-upload');
+        const webcamButton = document.getElementById('webcam-button');
+        const webcamView = document.getElementById('webcam-view');
+        const imageCanvas = document.getElementById('image-canvas');
+        const predictionContainer = document.getElementById('prediction-container');
+        const canvasContext = imageCanvas.getContext('2d');
+        let model;
 
-    async function init() {
-      if(isStreaming) return;  // prevent multiple starts
+        async function loadModel() {
+            // This function will be populated by your Teachable Machine script
+            // Example (replace with your actual code):
+            // const modelURL = 'YOUR_MODEL_URL/model.json';
+            // const metadataURL = 'YOUR_MODEL_URL/metadata.json';
+            // model = await tmImage.load(modelURL, metadataURL);
+        }
 
-      model = await tmImage.load(MODEL_URL, METADATA_URL);
-      maxPredictions = model.getTotalClasses();
+        async function predictImage() {
+            if (model && imageCanvas.style.display !== 'none') {
+                const prediction = await model.predict(imageCanvas);
+                // Sort predictions by probability
+                prediction.sort((a, b) => b.probability - a.probability);
+                predictionContainer.innerText = ${prediction[0].className} (Confidence: ${(prediction[0].probability * 100).toFixed(2)}%);
+            } else {
+                predictionContainer.innerText = 'No image selected or model not loaded.';
+            }
+        }
 
-      const flip = true;
-      webcam = new tmImage.Webcam(320, 320, flip);
-      await webcam.setup();
-      await webcam.play();
-      window.requestAnimationFrame(loop);
+        imageUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        imageCanvas.width = img.width;
+                        imageCanvas.height = img.height;
+                        canvasContext.drawImage(img, 0, 0, img.width, img.height);
+                        imageCanvas.style.display = 'block';
+                        webcamView.style.display = 'none';
+                        predictImage();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imageCanvas.style.display = 'none';
+                predictionContainer.innerText = '';
+            }
+        });
 
-      const webcamContainer = document.getElementById("webcam-container");
-      webcamContainer.innerHTML = "";
-      webcamContainer.appendChild(webcam.canvas);
+        let streaming = false;
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(function(stream) {
+                webcamView.srcObject = stream;
+                webcamView.play();
+                streaming = true;
+            })
+            .catch(function(err) {
+                console.error("An error occurred: " + err);
+                webcamButton.disabled = true;
+            });
 
-      labelContainer = document.getElementById("label-container");
-      labelContainer.innerHTML = "";
-      for(let i=0; i < maxPredictions; i++) {
-        const div = document.createElement("div");
-        div.setAttribute("id", "label-"+i);
-        labelContainer.appendChild(div);
-      }
+        webcamView.addEventListener('loadedmetadata', function(){
+            imageCanvas.width = webcamView.videoWidth;
+            imageCanvas.height = webcamView.videoHeight;
+        }, false);
 
-      isStreaming = true;
-      const startBtn = document.getElementById("start-button");
-      startBtn.disabled = true;
-      startBtn.textContent = "Detecting...";
-    }
+        webcamButton.addEventListener('click', () => {
+            if (streaming) {
+                imageCanvas.width = webcamView.videoWidth;
+                imageCanvas.height = webcamView.videoHeight;
+                canvasContext.drawImage(webcamView, 0, 0, webcamView.videoWidth, webcamView.videoHeight);
+                imageCanvas.style.display = 'block';
+                webcamView.style.display = 'block';
+                predictImage();
+            }
+        });
 
-    async function loop() {
-      webcam.update();
-      await predict();
-      window.requestAnimationFrame(loop);
-    }
-
-    async function predict() {
-      const predictions = await model.predict(webcam.canvas);
-      for(let i=0; i < maxPredictions; i++) {
-        const classPred = predictions[i];
-        const labelDiv = document.getElementById("label-"+i);
-        labelDiv.textContent = `${classPred.className}: ${(classPred.probability*100).toFixed(2)}%`;
-      }
-    }
-
-    document.getElementById("start-button").addEventListener("click", init);
-  </script>
+        // Call the model loading function (will be completed by your Teachable Machine script)
+        loadModel();
+    </script>
 </body>
 </html>
