@@ -1,117 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aditya Dixit - School Project</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans&display=swap" rel="stylesheet" />
-  <style>
-    /* Reset */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body, html {
-      height: 100%;
-      font-family: 'Open Sans', sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      overflow-x: hidden;
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      padding: 40px 60px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-      max-width: 500px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-    }
-
-    h1 {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 3.5rem;
-      letter-spacing: 2px;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-      background: linear-gradient(90deg, #ffd700, #ff8c00);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      transition: transform 0.3s ease;
-      cursor: default;
-    }
-
-    h1:hover {
-      transform: scale(1.05);
-    }
-
-    .details {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 10px;
-      color: #ffe082;
-    }
-
-    .school-name {
-      font-size: 1.2rem;
-      font-style: italic;
-      color: #fff8dc;
-      margin-bottom: 25px;
-      letter-spacing: 1px;
-    }
-
-    .footer-text {
-      font-size: 1rem;
-      color: #c0c0c0;
-      margin-top: 30px;
-      opacity: 0.7;
-    }
-
-    /* subtle floating animation */
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    h1 {
-      animation: float 4s ease-in-out infinite;
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      .container {
-        padding: 30px 20px;
-        max-width: 90vw;
-      }
-      h1 {
-        font-size: 2.5rem;
-      }
-      .details {
-        font-size: 1.2rem;
-      }
-      .school-name {
-        font-size: 1rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dog vs. Cat Classifier</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        #prediction-container {
+            font-weight: bold;
+        }
+        canvas {
+            max-width: 400px;
+            max-height: 300px;
+            border: 1px solid #ccc;
+        }
+        video {
+            max-width: 400px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
-  <div class="container" role="main">
-    <h1>Aditya Dixit</h1>
-    <div class="details">Class 12th A1</div>
-    <div class="school-name">SKD Academy</div>
-    <div class="footer-text">Welcome to my school project website!</div>
-  </div>
+    <h1>Dog vs. Cat Classifier</h1>
+    <p>Select an image or use your webcam to see if it's a dog or a cat!</p>
+
+    <div>
+        <input type="file" id="image-upload" accept="image/*">
+    </div>
+
+    <div>
+        <button id="webcam-button">Enable Webcam</button>
+        <video id="webcam-view" autoplay playsinline style="display: none;"></video>
+    </div>
+
+    <canvas id="image-canvas" style="display: none;"></canvas>
+    <p>Prediction: <span id="prediction-container"></span></p>
+
+    <script>
+        // Paste your Teachable Machine model loading and prediction script here
+        // It will likely include functions like:
+        // - loading the model
+        // - handling image uploads
+        // - accessing the webcam
+        // - making predictions
+        // - updating the prediction-container element
+    </script>
+
+    <script>
+        const imageUpload = document.getElementById('image-upload');
+        const webcamButton = document.getElementById('webcam-button');
+        const webcamView = document.getElementById('webcam-view');
+        const imageCanvas = document.getElementById('image-canvas');
+        const predictionContainer = document.getElementById('prediction-container');
+        const canvasContext = imageCanvas.getContext('2d');
+        let model;
+
+        async function loadModel() {
+            // This function will be populated by your Teachable Machine script
+            // Example (replace with your actual code):
+            // const modelURL = 'YOUR_MODEL_URL/model.json';
+            // const metadataURL = 'YOUR_MODEL_URL/metadata.json';
+            // model = await tmImage.load(modelURL, metadataURL);
+        }
+
+        async function predictImage() {
+            if (model && imageCanvas.style.display !== 'none') {
+                const prediction = await model.predict(imageCanvas);
+                // Sort predictions by probability
+                prediction.sort((a, b) => b.probability - a.probability);
+                predictionContainer.innerText = ${prediction[0].className} (Confidence: ${(prediction[0].probability * 100).toFixed(2)}%);
+            } else {
+                predictionContainer.innerText = 'No image selected or model not loaded.';
+            }
+        }
+
+        imageUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        imageCanvas.width = img.width;
+                        imageCanvas.height = img.height;
+                        canvasContext.drawImage(img, 0, 0, img.width, img.height);
+                        imageCanvas.style.display = 'block';
+                        webcamView.style.display = 'none';
+                        predictImage();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imageCanvas.style.display = 'none';
+                predictionContainer.innerText = '';
+            }
+        });
+
+        let streaming = false;
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(function(stream) {
+                webcamView.srcObject = stream;
+                webcamView.play();
+                streaming = true;
+            })
+            .catch(function(err) {
+                console.error("An error occurred: " + err);
+                webcamButton.disabled = true;
+            });
+
+        webcamView.addEventListener('loadedmetadata', function(){
+            imageCanvas.width = webcamView.videoWidth;
+            imageCanvas.height = webcamView.videoHeight;
+        }, false);
+
+        webcamButton.addEventListener('click', () => {
+            if (streaming) {
+                imageCanvas.width = webcamView.videoWidth;
+                imageCanvas.height = webcamView.videoHeight;
+                canvasContext.drawImage(webcamView, 0, 0, webcamView.videoWidth, webcamView.videoHeight);
+                imageCanvas.style.display = 'block';
+                webcamView.style.display = 'block';
+                predictImage();
+            }
+        });
+
+        // Call the model loading function (will be completed by your Teachable Machine script)
+        loadModel();
+    </script>
 </body>
 </html>
-
